@@ -161,7 +161,7 @@ class SmartNetworkThermometer(threading.Thread):
                         #conn.sendall(response)
                     if not data:
                         break
-                conn.sendall(byte_response)
+                    conn.sendall(byte_response)
             # try:
             # msg, addr = self.serverSocket.recvfrom(1024)
 
