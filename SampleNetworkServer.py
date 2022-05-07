@@ -112,55 +112,56 @@ class SmartNetworkThermometer(threading.Thread):
                 while True:
                     data = conn.recv(4096)
                     print(data)
-                    if data:
-                        msg = data.decode("utf-8").strip()
-                        cmds = msg.split(' ')
-                        print(msg)
-                        if len(cmds) == 1:  # protected commands case
-                            semi = msg.find(';')
-                            if semi != -1:  # if we found the semicolon
-                                print (msg)
-                                if msg[:semi] in self.tokens:  # if its a valid token
-                                    # send the response to client based on what the processCommands returns
-                                    response = self.processCommands(msg[semi + 1:])
-                                    byte_response = bytes(response, 'utf-8')
-                                    # look up how to encode the response before sending out in TCP socket
-                                    conn.sendall(byte_response)
-                                else:
-                                    response = "Bad Token\n"
-                                    
-                                    byte_response = bytes(response, 'utf-8')
-                                    conn.sendall(byte_response)
-                                    # self.serverSocket.sendto(b"Bad Token\n", addr)
-                            else:
-                                response = "Bad Command\n"
+                    msg = data.decode("utf-8").strip()
+                    cmds = msg.split(' ')
+                    print(msg)
+                    if len(cmds) == 1:  # protected commands case
+                        semi = msg.find(';')
+                        if semi != -1:  # if we found the semicolon
+                            print (msg)
+                            if msg[:semi] in self.tokens:  # if its a valid token
+                                # send the response to client based on what the processCommands returns
+                                response = self.processCommands(msg[semi + 1:])
                                 byte_response = bytes(response, 'utf-8')
-                                conn.sendall(byte_response)
-                                # self.serverSocket.sendto(b"Bad Command\n", addr)
-                        elif len(cmds) == 2:
-                            if cmds[0] in self.open_cmds:  # if its AUTH or LOGOUT
-                                if cmds[0] == "AUTH":
-                                    response = self.processCommands(msg)
-                                    byte_response = bytes(response, 'utf-8')
-                                    conn.sendall(byte_response) 
-                                    
-                                elif cmds[0] =="LOGOUT":
-                                    response = self.processCommands(msg)
-                                    if response == 0:
-                                        fin_message = b"Logged Out Successfully\n"
-                                        conn.sendall(fin_message)
-
+                                # look up how to encode the response before sending out in TCP socket
+                                
+                                #conn.sendall(byte_response)
                             else:
-                                response = b"Authenticate First\n"
-                                conn.sendall(response)
-                                # self.serverSocket1.sendto(b"Authenticate First\n", addr)
+                                response = "Bad Token\n"
+                                
+                                byte_response = bytes(response, 'utf-8')
+                                #conn.sendall(byte_response)
+                                # self.serverSocket.sendto(b"Bad Token\n", addr)
+                        else:
+                            response = "Bad Command\n"
+                            byte_response = bytes(response, 'utf-8')
+                            #conn.sendall(byte_response)
+                            # self.serverSocket.sendto(b"Bad Command\n", addr)
+                    elif len(cmds) == 2:
+                        if cmds[0] in self.open_cmds:  # if its AUTH or LOGOUT
+                            if cmds[0] == "AUTH":
+                                response = self.processCommands(msg)
+                                byte_response = bytes(response, 'utf-8')
+                                #conn.sendall(byte_response) 
+                                
+                            elif cmds[0] =="LOGOUT":
+                                response = self.processCommands(msg)
+                                if response == 0:
+                                    byte_response = b"Logged Out Successfully\n"
+                                    #conn.sendall(byte_response)
 
                         else:
-                            # otherwise bad command
-                            response = b"Bad Command\n"
-                            conn.sendall(response)
-                    elif not data:
+                            response = b"Authenticate First\n"
+                            #conn.sendall(response)
+                            # self.serverSocket1.sendto(b"Authenticate First\n", addr)
+
+                    else:
+                        # otherwise bad command
+                        byte_response = b"Bad Command\n"
+                        #conn.sendall(response)
+                    if not data:
                         break
+                conn.sendall(byte_response)
             # try:
             # msg, addr = self.serverSocket.recvfrom(1024)
 
