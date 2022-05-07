@@ -159,8 +159,8 @@ class SmartNetworkThermometer(threading.Thread):
                         # otherwise bad command
                         byte_response = b"Bad Command\n"
                         #conn.sendall(response)
-                    if not data:
-                        break
+                    #if not data:
+                     #   break
                     conn.sendall(byte_response)
             # try:
             # msg, addr = self.serverSocket.recvfrom(1024)
