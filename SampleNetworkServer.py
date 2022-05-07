@@ -26,9 +26,10 @@ class SmartNetworkThermometer(threading.Thread):
         self.updateTemperature()
         self.tokens = []
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.serverSocket.bind(("127.0.0.1", port))
         # self.port = port
-        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         #self.serverSocket.setblocking(0)
         # fcntl.fcntl(self.serverSocket, fcntl.F_SETFL, os.O_NONBLOCK)
 
