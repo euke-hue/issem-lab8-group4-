@@ -105,9 +105,11 @@ class SmartNetworkThermometer(threading.Thread):
 
     def run(self):  # the running function
         while True:
-
+            
             self.serverSocket.listen()
             conn, addr = self.serverSocket.accept()
+            self.updateTemperature()
+            time.sleep(self.updatePeriod)
             with conn:
                 while True:
                     data = conn.recv(8196)
@@ -162,8 +164,7 @@ class SmartNetworkThermometer(threading.Thread):
  
 
 
-        self.updateTemperature()
-        time.sleep(self.updatePeriod)
+
 
 
 class SimpleClient:
