@@ -160,18 +160,7 @@ class SmartNetworkThermometer(threading.Thread):
                         response = b"Bad Command\n"
                         conn.sendall(response)
  
-            # try:
-            # msg, addr = self.serverSocket.recvfrom(1024)
 
-            # self.serverSocket.sendto(b"Bad Command\n", addr)
-            except IOError as e:
-                if e.errno == errno.EWOULDBLOCK:
-                    # do nothing
-                    pass
-                else:
-                    # do nothing for now
-                    pass
-                msg = ""
 
         self.updateTemperature()
         time.sleep(self.updatePeriod)
