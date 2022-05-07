@@ -52,7 +52,7 @@ class SimpleNetworkClient :
             s.connect(("127.0.0.1", p))
             byte_req = bytes("%s;GET_TEMP" % tok, 'utf-8')            
             s.sendall(byte_req)
-            msg = s.recv(4096)
+            msg = s.recv(8196)
             print(f"Received {msg!r}")
             m = msg.decode("utf-8").strip("\n")
             print(m)
@@ -66,7 +66,7 @@ class SimpleNetworkClient :
             s.connect(("127.0.0.1", p))
             byte_req = bytes("AUTH %s" % pw, 'utf-8')            
             s.sendall(byte_req)
-            msg = s.recv(4096)
+            msg = s.recv(8196)
             print(f"Received {msg!r}")
             m = msg.decode("utf-8")
             return m
