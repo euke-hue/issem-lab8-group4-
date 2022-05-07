@@ -31,7 +31,7 @@ class SmartNetworkThermometer(threading.Thread):
         # self.port = port
 
         #self.serverSocket.setblocking(0)
-        # fcntl.fcntl(self.serverSocket, fcntl.F_SETFL, os.O_NONBLOCK)
+        fcntl.fcntl(self.serverSocket, fcntl.F_SETFL, os.O_NONBLOCK)
 
         self.deg = "K"
 
@@ -110,7 +110,7 @@ class SmartNetworkThermometer(threading.Thread):
             conn, addr = self.serverSocket.accept()
             with conn:
                 while True:
-                    data = conn.recv(4096)
+                    data = conn.recv(8196)
                     print(data)
                     msg = data.decode("utf-8").strip()
                     cmds = msg.split(' ')
@@ -125,55 +125,53 @@ class SmartNetworkThermometer(threading.Thread):
                                 byte_response = bytes(response, 'utf-8')
                                 # look up how to encode the response before sending out in TCP socket
                                 
-                                #conn.sendall(byte_response)
+                                conn.sendall(byte_response)
                             else:
                                 response = "Bad Token\n"
                                 
                                 byte_response = bytes(response, 'utf-8')
-                                #conn.sendall(byte_response)
+                                conn.sendall(byte_response)
                                 # self.serverSocket.sendto(b"Bad Token\n", addr)
                         else:
                             response = "Bad Command\n"
                             byte_response = bytes(response, 'utf-8')
-                            #conn.sendall(byte_response)
+                            conn.sendall(byte_response)
                             # self.serverSocket.sendto(b"Bad Command\n", addr)
                     elif len(cmds) == 2:
                         if cmds[0] in self.open_cmds:  # if its AUTH or LOGOUT
                             if cmds[0] == "AUTH":
                                 response = self.processCommands(msg)
                                 byte_response = bytes(response, 'utf-8')
-                                #conn.sendall(byte_response) 
+                                conn.sendall(byte_response) 
                                 
                             elif cmds[0] =="LOGOUT":
                                 response = self.processCommands(msg)
                                 if response == 0:
                                     byte_response = b"Logged Out Successfully\n"
-                                    #conn.sendall(byte_response)
+                                    conn.sendall(byte_response)
 
                         else:
                             response = b"Authenticate First\n"
-                            #conn.sendall(response)
+                            conn.sendall(response)
                             # self.serverSocket1.sendto(b"Authenticate First\n", addr)
 
                     else:
                         # otherwise bad command
-                        byte_response = b"Bad Command\n"
-                        #conn.sendall(response)
-                    #if not data:
-                     #   break
-                    conn.sendall(byte_response)
+                        response = b"Bad Command\n"
+                        conn.sendall(response)
+ 
             # try:
             # msg, addr = self.serverSocket.recvfrom(1024)
 
             # self.serverSocket.sendto(b"Bad Command\n", addr)
-            # except IOError as e:
-            #     if e.errno == errno.EWOULDBLOCK:
-            #         # do nothing
-            #         pass
-            #     else:
-            #         # do nothing for now
-            #         pass
-            #     msg = ""
+            except IOError as e:
+                if e.errno == errno.EWOULDBLOCK:
+                    # do nothing
+                    pass
+                else:
+                    # do nothing for now
+                    pass
+                msg = ""
 
         self.updateTemperature()
         time.sleep(self.updatePeriod)
