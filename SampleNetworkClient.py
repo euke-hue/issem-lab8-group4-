@@ -81,6 +81,8 @@ class SimpleNetworkClient :
             print("NETWORK CLIENT: Sending the password -  ", send)
             data = s.recv(2048)
             m = data.decode("utf-8")
+            if not data or data == b'':
+            	return
             print("NETWORK CLIENT: received the TOKEN: %s for port: " % m, p)
             return m
 
