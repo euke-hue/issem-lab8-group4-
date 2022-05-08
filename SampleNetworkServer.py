@@ -27,9 +27,7 @@ class SmartNetworkThermometer(threading.Thread):
         self.tokens = []
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serverSocket.bind(("127.0.0.1", port))
-        # self.port = port
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # self.serverSocket.setblocking(0)
         # fcntl.fcntl(self.serverSocket, fcntl.F_SETFL, os.O_NONBLOCK)
 
         self.deg = "K"
@@ -63,7 +61,7 @@ class SmartNetworkThermometer(threading.Thread):
             if len(cs) == 2:  # should be either AUTH or LOGOUT
                 if cs[0] == "AUTH":
                     if cs[1] == "!Q#E%T&U8i6y4r2w":
-                            random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)))
+                            self.tokens.append(''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)))
                         # updated processCommands to return the last token just added
                         return self.tokens[-1]
                         
