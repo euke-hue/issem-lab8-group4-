@@ -63,8 +63,7 @@ class SmartNetworkThermometer(threading.Thread):
             if len(cs) == 2:  # should be either AUTH or LOGOUT
                 if cs[0] == "AUTH":
                     if cs[1] == "!Q#E%T&U8i6y4r2w":
-                            random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in
-                            range(16)))
+                            random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)))
                         # updated processCommands to return the last token just added
                         return self.tokens[-1]
                         
