@@ -55,22 +55,23 @@ class SmartNetworkThermometer(threading.Thread):
         return self.curTemperature
 
     def processCommands(self, msg):  # removed addr because TCP
-        cmds = msg.split(';')
+         cmds = msg.split(';')
         for c in cmds:
             cs = c.split(' ')
             if len(cs) == 2:  # should be either AUTH or LOGOUT
                 if cs[0] == "AUTH":
                     if cs[1] == "!Q#E%T&U8i6y4r2w":
-                            self.tokens.append(''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)))
+                        # probably better to return the token as a result of the function
+                        self.tokens.append(''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)))
                         # updated processCommands to return the last token just added
                         return self.tokens[-1]
-                        
+                        # print (self.tokens[-1])
                 elif cs[0] == "LOGOUT":
                     if cs[1] in self.tokens:
                         self.tokens.remove(cs[1])
                         # if they asked for logout, return a 0
                         return "0"
-                else:  # for unknown command and implemented a return string instead of sending directly a UDP socket
+                else:  # unknown command and since this is UDP implement TCP
                     # self.serverSocket.sendto(b"Invalid Command\n", addr)
                     # have processCommands return a string instead of sending directly
                     return "Invalid Command\n"
@@ -83,7 +84,6 @@ class SmartNetworkThermometer(threading.Thread):
             elif c == "GET_TEMP":
                 # self.serverSocket.sendto(b"%f\n" % self.getTemperature(), addr)
                 # have processCommands return a string instead of sending directly
-                print(self.getTemperature())
                 return str("%f\n" % self.getTemperature())
             elif c == "UPDATE_TEMP":
                 self.updateTemperature()
@@ -91,6 +91,7 @@ class SmartNetworkThermometer(threading.Thread):
                 # self.serverSocket.sendto(b"Invalid Command\n", addr)
                 # have processCommands return a string instead of sending directly
                 return "Invalid Command\n"
+
 
 
     def run(self):  # the running function
