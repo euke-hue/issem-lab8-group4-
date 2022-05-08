@@ -45,31 +45,45 @@ class SimpleNetworkClient :
             plt.title(time.strftime("%A, %Y-%m-%d", time.localtime(now)))
 
     def getTemperatureFromPort(self, p, tok) :
+        #UDP Socket Code:
         #s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         #s.sendto(b"%s;GET_TEMP" % tok, ("127.0.0.1", p))
         #msg, addr = s.recvfrom(1024)
+        
+        #TCP Socket Code:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(("127.0.0.1", p))
-            byte_req = bytes("%s;GET_TEMP" % tok, 'utf-8')            
-            s.sendall(byte_req)
-            msg = s.recv(8196)
-            print(f"Received {msg!r}")
-            m = msg.decode("utf-8").strip("\n")
-            print(m)
+            send = bytes("%s;GET_TEMP" % tok, 'utf-8')
+            s.sendall(send)
+            print("NETWORCK CLIENT: Sending Request - ", send)
+            data = s.recv(2048)
+          
+            if not data or data == b'':
+            	return
+            m = data.decode("utf-8")
+            print("NETWORK CLIENT: received the new temperature: ", m)
             return (float(m))
 
+    
+
+    	
     def authenticate(self, p, pw) :
+        #UDP Socket code:
         # s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # s.sendto(b"AUTH %s" % pw, ("127.0.0.1", p))
         # msg, addr = s.recvfrom(1024)
+        
+        #TCP Socket code:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(("127.0.0.1", p))
-            byte_req = bytes("AUTH %s" % pw, 'utf-8')            
-            s.sendall(byte_req)
-            msg = s.recv(8196)
-            print(f"Received {msg!r}")
-            m = msg.decode("utf-8")
+            send = bytes("AUTH %s" % pw, 'utf-8')
+            s.sendall(send)
+            print("NETWORK CLIENT: Sending the password -  ", send)
+            data = s.recv(2048)
+            m = data.decode("utf-8")
+            print("NETWORK CLIENT: received the TOKEN for port %s "%p, m)
             return m
+
     def updateInfTemp(self, frame) :
         self.updateTime()
         if self.infToken is None : #not yet authenticated
