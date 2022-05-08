@@ -113,7 +113,7 @@ class SmartNetworkThermometer(threading.Thread):
                                 
                                 response = self.processCommands(msg[semi + 1:])
                                 byte_response = bytes(response, 'utf-8')
-                                print("NETWORK SERVER: Sending temp %d", byte_response)
+                                print("NETWORK SERVER: Sending temp ", byte_response)
                                 conn.sendall(byte_response)
                             else:
                                 response = "Bad Token\n"
@@ -130,7 +130,7 @@ class SmartNetworkThermometer(threading.Thread):
                             response = str(self.processCommands(msg))
                             if response != 0:
                                 byte_response = bytes(response, 'utf-8')
-                                print("NETWORK SERVER: Sending Token %d", byte_response)
+                                print("NETWORK SERVER: Sending Token: ", byte_response)
                                 conn.sendall(byte_response)
                                 
                             else:
