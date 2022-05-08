@@ -26,12 +26,11 @@ class SmartNetworkThermometer(threading.Thread):
         self.updateTemperature()
         self.tokens = []
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.serverSocket.bind(("127.0.0.1", port))
         # self.port = port
-
-        #self.serverSocket.setblocking(0)
-        fcntl.fcntl(self.serverSocket, fcntl.F_SETFL, os.O_NONBLOCK)
+        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # self.serverSocket.setblocking(0)
+        # fcntl.fcntl(self.serverSocket, fcntl.F_SETFL, os.O_NONBLOCK)
 
         self.deg = "K"
 
@@ -54,7 +53,7 @@ class SmartNetworkThermometer(threading.Thread):
             return self.curTemperature - 273
         if self.deg == "F":
             return (self.curTemperature - 273) * 9 / 5 + 32
-
+    #print(self.curTemperature)  
         return self.curTemperature
 
     def processCommands(self, msg):  # removed addr because TCP
@@ -64,19 +63,17 @@ class SmartNetworkThermometer(threading.Thread):
             if len(cs) == 2:  # should be either AUTH or LOGOUT
                 if cs[0] == "AUTH":
                     if cs[1] == "!Q#E%T&U8i6y4r2w":
-                        # probably better to return the token as a result of the function
-                        self.tokens.append(''.join(
                             random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in
                             range(16)))
                         # updated processCommands to return the last token just added
                         return self.tokens[-1]
-                        #print (self.tokens[-1])
+                        
                 elif cs[0] == "LOGOUT":
                     if cs[1] in self.tokens:
                         self.tokens.remove(cs[1])
                         # if they asked for logout, return a 0
-                        return 0
-                else:  # unknown command and since this is UDP implement TCP
+                        return "0"
+                else:  # for unknown command and implemented a return string instead of sending directly a UDP socket
                     # self.serverSocket.sendto(b"Invalid Command\n", addr)
                     # have processCommands return a string instead of sending directly
                     return "Invalid Command\n"
@@ -89,69 +86,60 @@ class SmartNetworkThermometer(threading.Thread):
             elif c == "GET_TEMP":
                 # self.serverSocket.sendto(b"%f\n" % self.getTemperature(), addr)
                 # have processCommands return a string instead of sending directly
-                #print("%f\n" % self.getTemperature())
-                #return "%f\n" % self.getTemperature()
-                #temp = self.getTemperature()
-                temp = self.getTemperature()
-                print(temp)
-                return str(temp)+"\n"
+                print(self.getTemperature())
+                return str("%f\n" % self.getTemperature())
             elif c == "UPDATE_TEMP":
                 self.updateTemperature()
-                print(self.updateTemperature())
             elif c:
                 # self.serverSocket.sendto(b"Invalid Command\n", addr)
                 # have processCommands return a string instead of sending directly
                 return "Invalid Command\n"
 
+
     def run(self):  # the running function
         while True:
-            
-            self.serverSocket.listen()
+            #updated the areas where there would be a UDP send() to a TCP sendall() within the existing TCP connection
+            self.serverSocket.listen(10)
             conn, addr = self.serverSocket.accept()
-            self.updateTemperature()
-            time.sleep(self.updatePeriod)
             with conn:
-                while True:
-                    data = conn.recv(8196)
-                    print(data)
+                data = conn.recv(2048)
+                if data:
                     msg = data.decode("utf-8").strip()
                     cmds = msg.split(' ')
-                    print(msg)
+                    print(data)
                     if len(cmds) == 1:  # protected commands case
                         semi = msg.find(';')
                         if semi != -1:  # if we found the semicolon
-                            print (msg)
+                            # print (msg)
                             if msg[:semi] in self.tokens:  # if its a valid token
-                                # send the response to client based on what the processCommands returns
+                                
                                 response = self.processCommands(msg[semi + 1:])
                                 byte_response = bytes(response, 'utf-8')
-                                # look up how to encode the response before sending out in TCP socket
-                                
+                                print("NETWORK SERVER: Sending temp %d", byte_response)
                                 conn.sendall(byte_response)
                             else:
                                 response = "Bad Token\n"
-                                
                                 byte_response = bytes(response, 'utf-8')
                                 conn.sendall(byte_response)
-                                # self.serverSocket.sendto(b"Bad Token\n", addr)
+                                
                         else:
                             response = "Bad Command\n"
                             byte_response = bytes(response, 'utf-8')
                             conn.sendall(byte_response)
-                            # self.serverSocket.sendto(b"Bad Command\n", addr)
+                            
                     elif len(cmds) == 2:
                         if cmds[0] in self.open_cmds:  # if its AUTH or LOGOUT
-                            if cmds[0] == "AUTH":
-                                response = self.processCommands(msg)
+                            response = str(self.processCommands(msg))
+                            if response != 0:
                                 byte_response = bytes(response, 'utf-8')
-                                conn.sendall(byte_response) 
+                                print("NETWORK SERVER: Sending Token %d", byte_response)
+                                conn.sendall(byte_response)
                                 
-                            elif cmds[0] =="LOGOUT":
-                                response = self.processCommands(msg)
-                                if response == 0:
-                                    byte_response = b"Logged Out Successfully\n"
-                                    conn.sendall(byte_response)
-
+                            else:
+                                fin_message = b"Logged Out Successfully\n"
+                                conn.sendall(fin_message)
+                                
+                               
                         else:
                             response = b"Authenticate First\n"
                             conn.sendall(response)
@@ -161,10 +149,10 @@ class SmartNetworkThermometer(threading.Thread):
                         # otherwise bad command
                         response = b"Bad Command\n"
                         conn.sendall(response)
- 
-
-
-
+                  
+            
+            self.updateTemperature()
+            time.sleep(self.updatePeriod)
 
 
 class SimpleClient:
@@ -213,32 +201,3 @@ class SimpleClient:
         self.incLn.set_data(range(30), self.incTemps)
         return self.incLn,
 
-
-UPDATE_PERIOD = .05  # in seconds
-SIMULATION_STEP = .1  # in seconds
-
-# create a new instance of IncubatorSimulator
-bob = infinc.Human(mass=8, length=1.68, temperature=36 + 273)
-# bobThermo = infinc.SmartThermometer(bob, UPDATE_PERIOD)
-bobThermo = SmartNetworkThermometer(bob, UPDATE_PERIOD, 23456)
-bobThermo.start()  # start the thread
-
-inc = infinc.Incubator(width=1, depth=1, height=1, temperature=37 + 273, roomTemperature=20 + 273)
-# incThermo = infinc.SmartNetworkThermometer(inc, UPDATE_PERIOD)
-incThermo = SmartNetworkThermometer(inc, UPDATE_PERIOD, 23457)
-incThermo.start()  # start the thread
-
-incHeater = infinc.SmartHeater(powerOutput=1500, setTemperature=45 + 273, thermometer=incThermo,
-                               updatePeriod=UPDATE_PERIOD)
-inc.setHeater(incHeater)
-incHeater.start()  # start the thread
-
-sim = infinc.Simulator(infant=bob, incubator=inc, roomTemp=20 + 273, timeStep=SIMULATION_STEP,
-                       sleepTime=SIMULATION_STEP / 10)
-
-sim.start()
-
-sc = SimpleClient(bobThermo, incThermo)
-
-plt.grid()
-plt.show()
