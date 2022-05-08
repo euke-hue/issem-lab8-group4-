@@ -56,7 +56,7 @@ class SmartNetworkThermometer(threading.Thread):
 
     def processCommands(self, msg):  # removed addr because TCP
          cmds = msg.split(';')
-        for c in cmds:
+         for c in cmds:
             cs = c.split(' ')
             if len(cs) == 2:  # should be either AUTH or LOGOUT
                 if cs[0] == "AUTH":
