@@ -119,12 +119,13 @@ class SmartNetworkThermometer(threading.Thread):
                                 response = "Bad Token\n"
                                 byte_response = bytes(response, 'utf-8')
                                 conn.sendall(byte_response)
+                                break
                                 
                         else:
                             response = "Bad Command\n"
                             byte_response = bytes(response, 'utf-8')
                             conn.sendall(byte_response)
-                            
+                            break
                     elif len(cmds) == 2:
                         if cmds[0] in self.open_cmds:  # if its AUTH or LOGOUT
                             response = str(self.processCommands(msg))
@@ -136,6 +137,7 @@ class SmartNetworkThermometer(threading.Thread):
                             else:
                                 fin_message = b"Logged Out Successfully\n"
                                 conn.sendall(fin_message)
+                                break
                                 
                                
                         else:
@@ -147,7 +149,9 @@ class SmartNetworkThermometer(threading.Thread):
                         # otherwise bad command
                         response = b"Bad Command\n"
                         conn.sendall(response)
-                  
+                        break
+                else:
+                  break  
             
             self.updateTemperature()
             time.sleep(self.updatePeriod)
