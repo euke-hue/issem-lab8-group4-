@@ -26,13 +26,8 @@ class SmartNetworkThermometer(threading.Thread):
         self.updateTemperature()
         self.tokens = []
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serverSocket.bind(("127.0.0.1", port))
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.port_list = []
-        self.port_list.append(port)
-        if port not in self.port_list:
-             self.serverSocket.bind(("127.0.0.1", port))
-        else:
-            pass
         # fcntl.fcntl(self.serverSocket, fcntl.F_SETFL, os.O_NONBLOCK)
 
         self.deg = "K"
@@ -102,7 +97,6 @@ class SmartNetworkThermometer(threading.Thread):
     def run(self):  # the running function
         while True:
             #updated the areas where there would be a UDP send() to a TCP sendall() within the existing TCP connection
-            
             self.serverSocket.listen(10)
             conn, addr = self.serverSocket.accept()
             with conn:
